@@ -110,7 +110,13 @@ def scrape_details(details_url):
 start_url = "https://www.idealista.pt/comprar-casas/almada/caparica-e-trafaria/"
 
 
-while start_url:
+
+# Counter for the number of listings scraped
+count = 0
+max_count = 5  # Maximum number of listings to scrape
+
+while start_url and count < max_count:  # Modified this line to include count < max_count
+# while start_url:
     # Make a request to the Idealista website
     response = requests.get(start_url)
     if response.status_code == 200:
@@ -127,6 +133,14 @@ while start_url:
         logging.info(f"Found {num_listings} listings on this page.")
         
         for listing in listings:
+
+            # Increase the count for each listing processed
+            count += 1
+            
+            if count > max_count:  # New condition
+                break  # Break the loop if maximum count reached
+
+
             # Pretty print each listing
             print(listing.prettify())
             
@@ -145,6 +159,16 @@ while start_url:
                 print(details_data)
             else:
                 logging.info("Details link not found in listing.")
+
+
+
+
+        if count >= max_count:  # New condition
+            logging.info(f"Reached the maximum count of {max_count}. Exiting.")
+            break  # Break the loop if maximum count reached
+
+
+
         
         # Find the next page link
         next_page_element = soup.find("a", {"rel": "nofollow", "class": "icon-arrow-right-after"})

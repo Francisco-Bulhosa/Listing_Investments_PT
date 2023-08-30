@@ -20,7 +20,7 @@ def initialize_database():
         price_per_sq_meter REAL,
         number_of_rooms INTEGER,
         number_of_baths INTEGER,
-        days_in_market INTEGER
+        days_in_market INTEGER,
         with_elevator INTEGER DEFAULT 0, 
         with_garage INTEGER DEFAULT 0 
     );
@@ -31,3 +31,4 @@ def initialize_database():
 
 if __name__ == "__main__":
     initialize_database()
+
