@@ -67,12 +67,12 @@ This will start the scraper, and it will fetch listings from the Idealista websi
 
 ### SQLite Database
 
-The scraped data is stored in a SQLite database for further analysis. The database schema is defined in `initialize_database.py`.
+The scraped data is stored in a SQLite database for further analysis. The database schema is defined in `SQLite_db.py`.
 
 To initialize the database:
 
 ```bash
-python initialize_database.py
+python SQLite_db.py
 ```
 
 This will create a new SQLite database with a `listings` table where the scraped data will be stored.
