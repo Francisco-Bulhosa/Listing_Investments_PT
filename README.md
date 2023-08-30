@@ -23,16 +23,16 @@ This project aims to scrape real estate listings from the Idealista website and 
 
 Clone this repository to your local machine.
 
-\`\`\`bash
+```bash
 git clone https://github.com/yourusername/your-repo-name.git
-\`\`\`
+```
 
 Navigate to the project directory and install the required packages.
 
-\`\`\`bash
+```bash
 cd your-repo-name
 pip install -r requirements.txt
-\`\`\`
+```
 
 ## Usage
 
@@ -42,9 +42,9 @@ The scraper is implemented in Python and uses BeautifulSoup4 to parse HTML conte
 
 To run the scraper:
 
-\`\`\`bash
+```bash
 python scraper.py
-\`\`\`
+```
 
 This will start the scraper, and it will fetch listings from the Idealista website. The scraped data includes:
 
@@ -71,9 +71,9 @@ The scraped data is stored in a SQLite database for further analysis. The databa
 
 To initialize the database:
 
-\`\`\`bash
+```bash
 python initialize_database.py
-\`\`\`
+```
 
 This will create a new SQLite database with a `listings` table where the scraped data will be stored.
 
