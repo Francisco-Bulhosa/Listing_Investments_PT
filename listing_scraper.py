@@ -18,22 +18,34 @@ def scrape_details(details_url):
         scraped_data = {}
 
         # Scrape description
-        description = details_soup.find("div", class_="item-description description")
+        description = details_soup.find("span", class_="main-info__title-main")
         if description is not None:
             scraped_data["description"] = description.text
 
-        # Scrape address
-        address = details_soup.find("div", class_="item-address")
-        if address is not None:
-            scraped_data["address"] = address.text
+        # Locate the h2 element with the text "Localização"
+        localizacao_header = details_soup.find("h2", string="Localização")
+
+        # Check if the header was found
+        if localizacao_header:
+            # Find the next <ul> sibling element
+            ul_element = localizacao_header.find_next_sibling("ul")
+            
+            # Find all the <li> elements with class "header-map-list" under this <ul>
+            address_elements = ul_element.find_all("li", class_="header-map-list") if ul_element else []
+            
+            # Check if any address elements were found
+            if address_elements:
+                address_parts = [elem.text.strip() for elem in address_elements]
+                complete_address = ', '.join(address_parts)
+                scraped_data["address"] = complete_address
 
         # Scrape listing price
-        listing_date = details_soup.find("div", class_="item-price")
-        if price is not None:
-            scraped_data["listing_price"] = price.text
+        listing_price = details_soup.find("span", class_="info-data-price")
+        if listing_price is not None:
+            scraped_data["listing_price"] = price.text 
 
             # Scrape listing date
-        listing_date = details_soup.find("div", class_="listing-date")
+        listing_date = details_soup.find("p", class_="stats-text")
         if listing_date:
             scraped_data["listing_date"] = listing_date.text.strip()
 
@@ -50,36 +62,43 @@ def scrape_details(details_url):
         # Scrape URL 
         scraped_data["url"] = details_url
 
-        # Scrape square meters built
-        square_meters_built = details_soup.find("div", class_="square-meters-built")
-        if square_meters_built:
-            scraped_data["square_meters_built"] = float(square_meters_built.text.strip().replace(" m²", ""))
+        # Find all the <span> elements under <div class="info-features">
+        info_features = details_soup.find("div", class_="info-features")
+        if info_features:
+            feature_spans = info_features.find_all("span")
+            for feature in feature_spans:
+                feature_text = feature.text.strip().lower()  # Convert to lowercase for easier comparison
+                if "m²" in feature_text:
+                    scraped_data["square_meters_built"] = feature_text.replace(" m² área bruta", "")
+                elif "t" in feature_text:
+                    scraped_data["number_of_rooms"] = feature_text.replace("t", "") # number of habitable divisions
+                elif "com elevador" in feature_text:
+                    scraped_data["with_elevator"] = True # If it has or not an elevator
+                elif "garagem incluída" in feature_text:
+                    scraped_data["with_garage"] = True # if it has a garage
 
-        # Scrape total square meter
-        total_sq_meter = details_soup.find("div", class_="total-square-meter")
-        if total_sq_meter:
-            scraped_data["total_sq_meter"] = float(total_sq_meter.text.strip().replace(" m²", ""))
+        # # Scrape total square meter
+        # total_sq_meter = details_soup.find("div", class_="total-square-meter")
+        # if total_sq_meter:
+        #     scraped_data["total_sq_meter"] = float(total_sq_meter.text.strip().replace(" m²", ""))
 
-        # Scrape price per square meter
-        price_per_sq_meter = details_soup.find("div", class_="price-per-sq-meter")
-        if price_per_sq_meter:
-            scraped_data["price_per_sq_meter"] = float(price_per_sq_meter.text.strip().replace(" €/m²", ""))
+        price_per_sq_meter_element = details_soup.find('span', class_='flex-feature-details', string=lambda text: '€/m²' in text)
 
-        # Scrape number of rooms
-        number_of_rooms = details_soup.find("div", class_="number-of-rooms")
-        if number_of_rooms:
-            scraped_data["number_of_rooms"] = int(number_of_rooms.text.strip().replace(" rooms", ""))
-
-        # Scrape number of baths
-        number_of_baths = details_soup.find("div", class_="number-of-baths")
-        if number_of_baths:
-            scraped_data["number_of_baths"] = int(number_of_baths.text.strip().replace(" baths", ""))
+        if price_per_sq_meter_element:
+            price_per_sq_meter_text = price_per_sq_meter_element.text
+            # Clean up the text to extract the numeric value, remove the ' €/m²' part and convert to float
+            price_per_sq_meter = float(price_per_sq_meter_text.replace(' €/m²', '').replace('.', ''))
+            # Now `price_per_sq_meter` contains the numeric value
+        else:
+            # Handle the case where the element was not found
+            price_per_sq_meter = None
 
         # Scrape days in market
-        days_in_market = details_soup.find("div", class_="days-in-market")
+        days_in_market = details_soup.find("p", class_="date-update-text")
         if days_in_market:
-            scraped_data["days_in_market"] = int(days_in_market.text.strip().replace(" days", ""))
-
+            days_text = days_in_market.text.strip()  # Gets "Anuncio atualizado há x dias"
+            days_number = int(days_text.split()[-2])  # Splits the text and picks the second last word, which should be "x" and converts it to int
+            scraped_data["days_in_market"] = days_number  # Stores it in the dictionary
 
         return scraped_data
     else:
@@ -90,13 +109,14 @@ def scrape_details(details_url):
 # Starting URL
 start_url = "https://www.idealista.pt/comprar-casas/almada/caparica-e-trafaria/"
 
- while start_url:
+
+while start_url:
     # Make a request to the Idealista website
     response = requests.get(start_url)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Pretty print the entire page (you might want to comment this out after verifying)
+        # Pretty print the entire page
         print(soup.prettify())
         
         # Find listings based on the article tag and classes
@@ -111,29 +131,21 @@ start_url = "https://www.idealista.pt/comprar-casas/almada/caparica-e-trafaria/"
             print(listing.prettify())
             
             # Extract link to details page
-            details_link_element = listing.find("a", role="heading")
+            details_link = listing.get("href")
             
             # Check for None
-            if details_link_element is not None:
-                details_link = details_link_element["href"]
-                
+            if details_link is not None:
                 # Debugging with intermediate variable
                 logging.info(f"Fetching details from {details_link}")
                 
-                full_details_link = "https://www.idealista.pt/" + details_link
+                full_details_link = "https://www.idealista.pt" + details_link
                 details_data = scrape_details(full_details_link)
                 
                 # Print the scraped details
                 print(details_data)
             else:
                 logging.info("Details link not found in listing.")
-
-
-
-
-
-
-
+        
         # Find the next page link
         next_page_element = soup.find("a", {"rel": "nofollow", "class": "icon-arrow-right-after"})
         
@@ -148,6 +160,6 @@ start_url = "https://www.idealista.pt/comprar-casas/almada/caparica-e-trafaria/"
         # Sleep for a short time to respect the website's rate-limiting
         time.sleep(5)
     else:
-        print("Failed to retrieve the webpage")
+        logging.info("Failed to retrieve the webpage")
         start_url = None
 
