@@ -12,6 +12,7 @@ def initialize_database():
         listing_price TEXT,
         listing_date TEXT,
         property_type TEXT,
+        construction_year TEXT,
         state TEXT,
         description TEXT,
         url TEXT,

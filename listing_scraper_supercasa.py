@@ -19,6 +19,7 @@ def initialize_database():
         listing_price TEXT,
         listing_date TEXT,
         property_type TEXT,
+        construction_year TEXT,
         state TEXT,
         description TEXT,
         url TEXT,
@@ -43,14 +44,14 @@ def insert_into_database(data):
     cursor = conn.cursor()
     cursor.execute("""
     INSERT INTO listings (
-        address, thumbnail, listing_price, listing_date, property_type, state,
+        address, thumbnail, listing_price, listing_date, property_type, construction_year, state,
         description, url, square_meters_built, total_sq_meter, price_per_sq_meter,
         number_of_rooms, number_of_baths, days_in_market, with_elevator, with_garage
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
-        data.get('listing_date'), data.get('property_type'), data.get('state'), 
+        data.get('listing_date'), data.get('property_type'), data.get('total_sq_meter'), data.get('state'), 
         data.get('description'), data.get('url'), data.get('square_meters_built'),
         data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
         data.get('number_of_baths'), data.get('days_in_market'), data.get('with_elevator', 0),
@@ -64,9 +65,6 @@ def scrape_details(details_url):
     response = requests.get(details_url)
     if response.status_code == 200:
         details_soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Pretty print a subset of the details page
-        print(details_soup.prettify())
         
         # Initialize a dictionary to store scraped data
         scraped_data = {}
@@ -97,7 +95,7 @@ def scrape_details(details_url):
         # Scrape listing price
         listing_price = details_soup.find("div", class_="property-price")
         if listing_price is not None:
-            scraped_data["listing_price"] = price.text 
+            scraped_data["listing_price"] = listing_price.text.strip()
 
             # Scrape listing date
         listing_date = details_soup.find("p", class_="stats-text")
@@ -118,19 +116,21 @@ def scrape_details(details_url):
         scraped_data["url"] = details_url
 
         # Find all the <span> elements under <div class="info-features">
-        info_features = details_soup.find("div", class_="info-features")
+        info_features = details_soup.find("div", class_="detail-property-info")
         if info_features:
             feature_spans = info_features.find_all("span")
             for feature in feature_spans:
                 feature_text = feature.text.strip().lower()  # Convert to lowercase for easier comparison
                 if "m²" in feature_text:
                     scraped_data["square_meters_built"] = feature_text.replace(" m² área bruta", "")
-                elif "t" in feature_text:
-                    scraped_data["number_of_rooms"] = feature_text.replace("t", "") # number of habitable divisions
-                elif "com elevador" in feature_text:
+                elif "quartos" in feature_text:
+                    scraped_data["number_of_rooms"] = feature_text.replace("", "quartos") # number of habitable divisions
+                elif "Com elevador" in feature_text:
                     scraped_data["with_elevator"] = True # If it has or not an elevator
-                elif "garagem incluída" in feature_text:
+                elif "Com garagem" in feature_text:
                     scraped_data["with_garage"] = True # if it has a garage
+                elif "Ano construção:" in feature_text:
+                    scraped_data[""]
 
         # # Scrape total square meter
         # total_sq_meter = details_soup.find("div", class_="total-square-meter")
@@ -163,23 +163,22 @@ def scrape_details(details_url):
             days_text = days_in_market.text.strip()  # Gets "Anuncio atualizado há x dias"
             days_number = int(days_text.split()[-2])  # Splits the text and picks the second last word, which should be "x" and converts it to int
             scraped_data["days_in_market"] = days_number  # Stores it in the dictionary
+              
+              
+    
+        # Logging to show the scraped data
+        logging.info("Scraped Data:")
+        for key, value in scraped_data.items():
+            logging.info(f"{key}: {value}")
+
 
         return scraped_data
     else:
         logging.info(f"Failed to retrieve details page with status code {response.status_code}")
         return None
     
-        # Insert data into the SQLite database
-    cursor.execute("""
-    INSERT INTO listings (address, thumbnail, listing_price, listing_date, property_type, state, description, url, square_meters_built, total_sq_meter, price_per_sq_meter, number_of_rooms, number_of_baths, days_in_market, with_elevator, with_garage)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (scraped_data.get("address"), scraped_data.get("thumbnail"), scraped_data.get("listing_price"), scraped_data.get("listing_date"), scraped_data.get("property_type"), scraped_data.get("state"), scraped_data.get("description"), scraped_data.get("url"), scraped_data.get("square_meters_built"), scraped_data.get("total_sq_meter"), scraped_data.get("price_per_sq_meter"), scraped_data.get("number_of_rooms"), scraped_data.get("number_of_baths"), scraped_data.get("days_in_market"), int(scraped_data.get("with_elevator", 0)), int(scraped_data.get("with_garage", 0))))
-    
-    # Commit changes
-    conn.commit()
+
         
-
-
 
 if __name__ == "__main__":
     initialize_database()
@@ -189,8 +188,6 @@ if __name__ == "__main__":
     # Starting URL
     start_url = "https://supercasa.pt/comprar-casas/almada/caparica-e-trafaria"
 
-
-    logging.basicConfig(level=logging.INFO)
 
     # Counter for the number of listings scraped
     count = 0
@@ -205,46 +202,55 @@ if __name__ == "__main__":
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Pretty print the entire page
-            print(soup.prettify())
-            
             # Find listings based on the article tag and classes
-            listings = soup.find_all("a", class_="property-list-title")
+            listings = soup.find_all("div", class_="property-info")
             
             # Debugging with intermediate variables
             num_listings = len(listings)
             logging.info(f"Found {num_listings} listings on this page.")
+
+
+            # LUuuuIIIISS!!! ISto pode ficar preso aqui se ele não encontrar listings??????????????????????????????????????????
             
             for listing in listings:
 
-                # Increase the count for each listing processed
-                count += 1
-                
-                if count > max_count:  # New condition
-                    break  # Break the loop if maximum count reached
-
-
-                # Pretty print each listing
-                print(listing.prettify())
-                
                 # Extract link to details page
-                details_link = listing.get("href")
-                
-                # Check for None
-                if details_link is not None:
-                    # Debugging with intermediate variable
-                    logging.info(f"Fetching details from {details_link}")
-                    
-                    full_details_link = "https://supercasa.pt" + details_link
-                    details_data = scrape_details(full_details_link)
-                    
+                details_link_element = listing.find("h2", class_="property-list-title")
+                if details_link_element:
+                    details_link = details_link_element.find("a")
 
-                    insert_into_database(details_data)  # Insert data into the database
+                    if details_link:
+                        details_link = details_link.get("href")
+                        # Check for None
+                        if details_link is not None:
+                            # Debugging with intermediate variable
+                            logging.info(f"Fetching details from {details_link}")
+                            
+                            full_details_link = "https://supercasa.pt" + details_link
+                            details_data = scrape_details(full_details_link)
+                            
+                            if details_data:  # Check if details were successfully scraped
+                                insert_into_database(details_data)  # Insert data into the database
+                                
 
+                                # Increase the count for each listing processed
+                                count += 1
+                                
+                                if count > max_count:  # New condition
+                                    break  # Break the loop if maximum count reached
 
+                                    # Print the scraped details
+                                    print(details_data)
+                            else:
+                                logging.info("Failed to scrape details for this listing.")
 
-                    # Print the scraped details
-                    print(details_data)
+                else:
+                    logging.warning(f"No <a> tag found in details link element: {details_link_element}")
+
+            else:
+                logging.warning(f"No details link element found in listing:\n{listing}")
+ 
+
 
 
         if count >= max_count:  # New condition
@@ -265,8 +271,9 @@ if __name__ == "__main__":
             start_url = None
 
         # Sleep for a short time to respect the website's rate-limiting
-        time.sleep(15)
+        time.sleep(8)
     else:
         logging.info("Failed to retrieve the webpage")
         start_url = None
 
+ 
