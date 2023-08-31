@@ -6,6 +6,60 @@ import sqlite3
 from SQLite_db import initialize_database
 
 
+
+def initialize_database():
+    conn = sqlite3.connect("listings.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS listings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        address TEXT,
+        thumbnail TEXT,
+        listing_price TEXT,
+        listing_date TEXT,
+        property_type TEXT,
+        state TEXT,
+        description TEXT,
+        url TEXT,
+        square_meters_built REAL,
+        total_sq_meter REAL,
+        price_per_sq_meter REAL,
+        number_of_rooms INTEGER,
+        number_of_baths INTEGER,
+        days_in_market INTEGER,
+        with_elevator INTEGER DEFAULT 0, 
+        with_garage INTEGER DEFAULT 0 
+    );
+    """)
+    
+    conn.commit()
+    conn.close()
+
+
+
+def insert_into_database(data):
+    conn = sqlite3.connect("listings.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO listings (
+        address, thumbnail, listing_price, listing_date, property_type, state,
+        description, url, square_meters_built, total_sq_meter, price_per_sq_meter,
+        number_of_rooms, number_of_baths, days_in_market, with_elevator, with_garage
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
+        data.get('listing_date'), data.get('property_type'), data.get('state'), 
+        data.get('description'), data.get('url'), data.get('square_meters_built'),
+        data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
+        data.get('number_of_baths'), data.get('days_in_market'), data.get('with_elevator', 0),
+        data.get('with_garage', 0)
+    ))
+    conn.commit()
+    conn.close()
+
+
 def scrape_details(details_url):
     response = requests.get(details_url)
     if response.status_code == 200:
@@ -83,13 +137,22 @@ def scrape_details(details_url):
         # if total_sq_meter:
         #     scraped_data["total_sq_meter"] = float(total_sq_meter.text.strip().replace(" m²", ""))
 
-        price_per_sq_meter_element = details_soup.find('span', class_='flex-feature-details', string=lambda text: '€/m²' in text)
+        price_per_sq_meter_div = details_soup.find('div', class_='detail-info-counter-txt')
 
-        if price_per_sq_meter_element:
-            price_per_sq_meter_text = price_per_sq_meter_element.text
-            # Clean up the text to extract the numeric value, remove the ' €/m²' part and convert to float
-            price_per_sq_meter = float(price_per_sq_meter_text.replace(' €/m²', '').replace('.', ''))
-            # Now `price_per_sq_meter` contains the numeric value
+        if price_per_sq_meter_div:
+            # Find the 'strong' element inside the 'div'
+            strong_element = price_per_sq_meter_div.find('strong')
+            
+            # Check if the strong element is found and contains '€ / m²'
+            if strong_element and '€ / m²' in strong_element.text:
+                price_per_sq_meter_text = strong_element.text.strip()
+                
+                # Clean up the text to extract the numeric value, remove the ' €/m²' part and convert to float
+                price_per_sq_meter = float(price_per_sq_meter_text.replace(' € / m²', '').replace('.', '').replace(',', '.'))
+                
+                # Now `price_per_sq_meter` contains the numeric value
+            else:
+                price_per_sq_meter = None
         else:
             # Handle the case where the element was not found
             price_per_sq_meter = None
@@ -105,70 +168,88 @@ def scrape_details(details_url):
     else:
         logging.info(f"Failed to retrieve details page with status code {response.status_code}")
         return None
+    
+        # Insert data into the SQLite database
+    cursor.execute("""
+    INSERT INTO listings (address, thumbnail, listing_price, listing_date, property_type, state, description, url, square_meters_built, total_sq_meter, price_per_sq_meter, number_of_rooms, number_of_baths, days_in_market, with_elevator, with_garage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (scraped_data.get("address"), scraped_data.get("thumbnail"), scraped_data.get("listing_price"), scraped_data.get("listing_date"), scraped_data.get("property_type"), scraped_data.get("state"), scraped_data.get("description"), scraped_data.get("url"), scraped_data.get("square_meters_built"), scraped_data.get("total_sq_meter"), scraped_data.get("price_per_sq_meter"), scraped_data.get("number_of_rooms"), scraped_data.get("number_of_baths"), scraped_data.get("days_in_market"), int(scraped_data.get("with_elevator", 0)), int(scraped_data.get("with_garage", 0))))
+    
+    # Commit changes
+    conn.commit()
         
 
-# Starting URL
-start_url = "https://supercasa.pt/comprar-casas/almada/caparica-e-trafaria"
 
 
-logging.basicConfig(level=logging.INFO)
+if __name__ == "__main__":
+    initialize_database()
+    logging.basicConfig(level=logging.INFO)
 
-# Counter for the number of listings scraped
-count = 0
-max_count = 5  # Maximum number of listings to scrape
 
-while start_url and count < max_count:  # Modified this line to include count < max_count
-# while start_url:
-    # Make a request to the Idealista website
-    response = requests.get(start_url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Pretty print the entire page
-        print(soup.prettify())
-        
-        # Find listings based on the article tag and classes
-        listings = soup.find_all("a", class_="property-list-title")
-        
-        # Debugging with intermediate variables
-        num_listings = len(listings)
-        logging.info(f"Found {num_listings} listings on this page.")
-        
-        for listing in listings:
+    # Starting URL
+    start_url = "https://supercasa.pt/comprar-casas/almada/caparica-e-trafaria"
 
-            # Increase the count for each listing processed
-            count += 1
+
+    logging.basicConfig(level=logging.INFO)
+
+    # Counter for the number of listings scraped
+    count = 0
+    max_count = 5  # Maximum number of listings to scrape
+
+
+    while start_url and count < max_count:  # Modified this line to include count < max_count
+    # while start_url:
+        # Make a request to the Idealista website
+        response = requests.get(start_url)
+
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            if count > max_count:  # New condition
-                break  # Break the loop if maximum count reached
-
-
-            # Pretty print each listing
-            print(listing.prettify())
+            # Pretty print the entire page
+            print(soup.prettify())
             
-            # Extract link to details page
-            details_link = listing.get("href")
+            # Find listings based on the article tag and classes
+            listings = soup.find_all("a", class_="property-list-title")
             
-            # Check for None
-            if details_link is not None:
-                # Debugging with intermediate variable
-                logging.info(f"Fetching details from {details_link}")
+            # Debugging with intermediate variables
+            num_listings = len(listings)
+            logging.info(f"Found {num_listings} listings on this page.")
+            
+            for listing in listings:
+
+                # Increase the count for each listing processed
+                count += 1
                 
-                full_details_link = "https://supercasa.pt" + details_link
-                details_data = scrape_details(full_details_link)
+                if count > max_count:  # New condition
+                    break  # Break the loop if maximum count reached
+
+
+                # Pretty print each listing
+                print(listing.prettify())
                 
-                # Print the scraped details
-                print(details_data)
-            else:
-                logging.info("Details link not found in listing.")
+                # Extract link to details page
+                details_link = listing.get("href")
+                
+                # Check for None
+                if details_link is not None:
+                    # Debugging with intermediate variable
+                    logging.info(f"Fetching details from {details_link}")
+                    
+                    full_details_link = "https://supercasa.pt" + details_link
+                    details_data = scrape_details(full_details_link)
+                    
+
+                    insert_into_database(details_data)  # Insert data into the database
 
 
+
+                    # Print the scraped details
+                    print(details_data)
 
 
         if count >= max_count:  # New condition
             logging.info(f"Reached the maximum count of {max_count}. Exiting.")
             break  # Break the loop if maximum count reached
-
 
 
         
