@@ -110,6 +110,7 @@ def scrape_details(details_url):
 start_url = "https://www.idealista.pt/comprar-casas/almada/caparica-e-trafaria/"
 
 
+logging.basicConfig(level=logging.INFO)
 
 # Counter for the number of listings scraped
 count = 0

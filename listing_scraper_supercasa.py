@@ -14,6 +14,7 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS listings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', 'now')),
         address TEXT,
         thumbnail TEXT,
         listing_price TEXT,
@@ -28,7 +29,6 @@ def initialize_database():
         price_per_sq_meter REAL,
         number_of_rooms INTEGER,
         number_of_baths INTEGER,
-        days_in_market INTEGER,
         with_elevator INTEGER DEFAULT 0, 
         with_garage INTEGER DEFAULT 0 
     );
@@ -46,15 +46,15 @@ def insert_into_database(data):
     INSERT INTO listings (
         address, thumbnail, listing_price, listing_date, property_type, construction_year, state,
         description, url, square_meters_built, total_sq_meter, price_per_sq_meter,
-        number_of_rooms, number_of_baths, days_in_market, with_elevator, with_garage
+        number_of_rooms, number_of_baths, with_elevator, with_garage
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
         data.get('listing_date'), data.get('property_type'), data.get('total_sq_meter'), data.get('state'), 
         data.get('description'), data.get('url'), data.get('square_meters_built'),
         data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
-        data.get('number_of_baths'), data.get('days_in_market'), data.get('with_elevator', 0),
+        data.get('number_of_baths'), data.get('with_elevator', 0),
         data.get('with_garage', 0)
     ))
     conn.commit()
@@ -70,34 +70,53 @@ def scrape_details(details_url):
         scraped_data = {}
 
         # Scrape description
-        description = details_soup.find("h1", class_="property-title")
-        if description is not None:
-            scraped_data["description"] = description.text
+        description_element = details_soup.find("div", class_="detail-info-description-txt")
+        if description_element:
+            description_text = description_element.get_text(strip=True)
+            scraped_data["description"] = description_text
 
 
-        # Locate the h2 element with the text "Localização"
-        localizacao_header = details_soup.find("div", string="detail-info-map-info")
+        # Locate the div element with class "detail-info-map-info"
+        address_div = details_soup.find("div", class_="detail-info-map-info")
 
-        # Check if the header was found
-        if localizacao_header:
-            # Find the next <ul> sibling element
-            span_element = localizacao_header.find_next_sibling("div")
+        # Check if the address div was found
+        if address_div:
+            # Extract the text from the address div
+            address_text = address_div.get_text(strip=True)
             
-            # Find all the <li> elements with class "header-map-list" under this <ul>
-            address_elements = span_element.find_all("div", class_="header-map-list") if ul_element else []
+            # Split the text by line breaks to get individual address parts
+            address_parts = address_text.split("<br>")
             
-            # Check if any address elements were found
-            if address_elements:
-                address_parts = [elem.text.strip() for elem in address_elements]
-                complete_address = ', '.join(address_parts)
-                scraped_data["address"] = complete_address
+            # Remove any leading or trailing whitespace from each address part
+            address_parts = [part.strip() for part in address_parts]
+            
+            # Join the address parts with commas to create the complete address
+            complete_address = ", ".join(address_parts)
+            
+            # Store the complete address in the scraped_data dictionary
+            scraped_data["address"] = complete_address
+
+        else:
+            # Log an error message if address extraction fails
+            logging.error("Failed to extract address from the page.")
 
         # Scrape listing price
-        listing_price = details_soup.find("div", class_="property-price")
-        if listing_price is not None:
-            scraped_data["listing_price"] = listing_price.text.strip()
+        listing_price_element = details_soup.find("div", class_="property-price")
+        if listing_price_element is not None:
+            # Get the text of the span element
+            listing_price_text = listing_price_element.get_text(strip=True)
+            
+            # Remove unwanted characters (e.g., "€" and extra text)
+            listing_price_cleaned = listing_price_text.replace("€", "").replace("Simular prestação", "").strip()
 
-            # Scrape listing date
+            # Convert the cleaned listing price to a float and round to two decimal places
+            listing_price = round(float(listing_price_cleaned), 2)
+            
+            # Store the cleaned listing price in the scraped_data dictionary
+            scraped_data["listing_price"] = listing_price
+
+
+        # Scrape listing date
         listing_date = details_soup.find("p", class_="stats-text")
         if listing_date:
             scraped_data["listing_date"] = listing_date.text.strip()
@@ -116,53 +135,91 @@ def scrape_details(details_url):
         scraped_data["url"] = details_url
 
         # Find all the <span> elements under <div class="info-features">
-        info_features = details_soup.find("div", class_="detail-property-info")
+        info_features = details_soup.find("div", class_="property-features")
         if info_features:
             feature_spans = info_features.find_all("span")
             for feature in feature_spans:
                 feature_text = feature.text.strip().lower()  # Convert to lowercase for easier comparison
                 if "m²" in feature_text:
-                    scraped_data["square_meters_built"] = feature_text.replace(" m² área bruta", "")
+                    scraped_data["square_meters_built"] = feature_text.replace("área bruta", "").replace("m²", "").strip()
                 elif "quartos" in feature_text:
-                    scraped_data["number_of_rooms"] = feature_text.replace("", "quartos") # number of habitable divisions
-                elif "Com elevador" in feature_text:
-                    scraped_data["with_elevator"] = True # If it has or not an elevator
-                elif "Com garagem" in feature_text:
-                    scraped_data["with_garage"] = True # if it has a garage
-                elif "Ano construção:" in feature_text:
-                    scraped_data[""]
+                    scraped_data["number_of_rooms"] = feature_text.replace(" quartos", "").strip()  # number of habitable divisions
+                elif "com elevador" in feature_text:
+                    scraped_data["with_elevator"] = True  # If it has or not an elevator
+                elif "com garagem" in feature_text:
+                    scraped_data["with_garage"] = True  # if it has a garage
+                elif "ano construção:" in feature_text:
+                    scraped_data["construction_year"] = feature_text.replace("ano construção:", "").strip()  # construction year, if available
 
-        # # Scrape total square meter
-        # total_sq_meter = details_soup.find("div", class_="total-square-meter")
-        # if total_sq_meter:
-        #     scraped_data["total_sq_meter"] = float(total_sq_meter.text.strip().replace(" m²", ""))
 
-        price_per_sq_meter_div = details_soup.find('div', class_='detail-info-counter-txt')
-
-        if price_per_sq_meter_div:
-            # Find the 'strong' element inside the 'div'
-            strong_element = price_per_sq_meter_div.find('strong')
-            
-            # Check if the strong element is found and contains '€ / m²'
-            if strong_element and '€ / m²' in strong_element.text:
-                price_per_sq_meter_text = strong_element.text.strip()
-                
-                # Clean up the text to extract the numeric value, remove the ' €/m²' part and convert to float
-                price_per_sq_meter = float(price_per_sq_meter_text.replace(' € / m²', '').replace('.', '').replace(',', '.'))
-                
-                # Now `price_per_sq_meter` contains the numeric value
-            else:
-                price_per_sq_meter = None
+        # Scrape total square meter
+        total_sq_meter = None  # Initialize the variable
+        area_bruta_element = details_soup.find("li", class_="key-feature", string="Área Bruta")
+        if area_bruta_element:
+            area_bruta_text = area_bruta_element.text.strip()
+            total_sq_meter = float(area_bruta_text.replace("Área Bruta :", "").replace("m2", "").strip())
+            scraped_data["total_sq_meter"] = total_sq_meter
         else:
-            # Handle the case where the element was not found
+            scraped_data["total_sq_meter"] = None
+            # Log an error message if total sq meter extraction fails
+            logging.error("Failed to extract total sq/meter from the page.")
+
+
+        # Calculate price per square meter
+        if listing_price is not None and total_sq_meter is not None:
+            price_per_sq_meter = listing_price / total_sq_meter
+            scraped_data["price_per_sq_meter"] = price_per_sq_meter
+        else:
             price_per_sq_meter = None
+            # Log an error message if total sq meter extraction fails
+            logging.error("Failed to extract price_per_sq_meter from the page.")
+
+        # import re
+
+        # price_per_sq_meter_div = details_soup.find('div', class_='detail-info-counter-txt')
+
+        # if price_per_sq_meter_div:
+        #     # Find the 'strong' element inside the 'div'
+        #     strong_element = price_per_sq_meter_div.find('strong')
+            
+        #     if strong_element:
+        #         price_per_sq_meter_text = strong_element.get_text(strip=True)  # Get the text inside the strong element
+        #         match = re.search(r'Preço / m²:\s*([\d.,]+)\s*€', price_per_sq_meter_text)
+                
+        #         if match:
+        #             price_per_sq_meter_value = match.group(1).replace(',', '.')
+                    
+        #             try:
+        #                 price_per_sq_meter = float(price_per_sq_meter_value)
+        #             except ValueError:
+        #                 price_per_sq_meter = None
+        #                 logging.error("Failed to convert Price per sq/m value to float.")
+        #         else:
+        #             price_per_sq_meter = None
+        #             logging.error("Failed to find '€ / m²' pattern in the strong element.")
+        #     else:
+        #         price_per_sq_meter = None
+        # else:
+        #     price_per_sq_meter = None
+
+        # logging.info(f"price_per_sq_meter: {price_per_sq_meter}")
 
         # Scrape days in market
-        days_in_market = details_soup.find("p", class_="date-update-text")
+        days_in_market = details_soup.find("p", class_="property-lastupdate")
         if days_in_market:
-            days_text = days_in_market.text.strip()  # Gets "Anuncio atualizado há x dias"
-            days_number = int(days_text.split()[-2])  # Splits the text and picks the second last word, which should be "x" and converts it to int
-            scraped_data["days_in_market"] = days_number  # Stores it in the dictionary
+            days_text = days_in_market.text.strip()  # Gets "Anúncio atualizado no dia 30 de agosto"
+            
+            # Extract the date from the text
+            date_str = days_text.split(" no dia ")[-1]
+            
+            # Parse the date using a datetime format that matches the text format
+            from datetime import datetime
+            date = datetime.strptime(date_str, "%d de %B")
+            
+            # Calculate the days difference between the scraped date and today's date
+            days_difference = (datetime.now() - date).days
+            
+            scraped_data["days_in_market"] = days_difference  # Stores it in the dictionary
               
               
     
@@ -191,7 +248,7 @@ if __name__ == "__main__":
 
     # Counter for the number of listings scraped
     count = 0
-    max_count = 5  # Maximum number of listings to scrape
+    max_count = 10  # Maximum number of listings to scrape
 
 
     while start_url and count < max_count:  # Modified this line to include count < max_count
@@ -275,5 +332,3 @@ if __name__ == "__main__":
     else:
         logging.info("Failed to retrieve the webpage")
         start_url = None
-
- 
