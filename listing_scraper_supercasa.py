@@ -20,9 +20,8 @@ def initialize_database():
         listing_price TEXT,
         listing_date TEXT,
         property_type TEXT,
-        construction_year TEXT,
+        construction_year INTEGER,
         state TEXT,
-        description TEXT,
         url TEXT,
         square_meters_built REAL,
         total_sq_meter REAL,
@@ -30,7 +29,8 @@ def initialize_database():
         number_of_rooms INTEGER,
         number_of_baths INTEGER,
         with_elevator INTEGER DEFAULT 0, 
-        with_garage INTEGER DEFAULT 0 
+        with_garage INTEGER DEFAULT 0,
+        description TEXT
     );
     """)
     
@@ -45,17 +45,17 @@ def insert_into_database(data):
     cursor.execute("""
     INSERT INTO listings (
         address, thumbnail, listing_price, listing_date, property_type, construction_year, state,
-        description, url, square_meters_built, total_sq_meter, price_per_sq_meter,
-        number_of_rooms, number_of_baths, with_elevator, with_garage
+         url, square_meters_built, total_sq_meter, price_per_sq_meter,
+        number_of_rooms, number_of_baths, with_elevator, with_garage, description
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
-        data.get('listing_date'), data.get('property_type'), data.get('total_sq_meter'), data.get('state'), 
-        data.get('description'), data.get('url'), data.get('square_meters_built'),
+        data.get('listing_date'), data.get('property_type'), data.get('construction_year'), data.get('state'), 
+        data.get('url'), data.get('square_meters_built'),
         data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
         data.get('number_of_baths'), data.get('with_elevator', 0),
-        data.get('with_garage', 0)
+        data.get('with_garage', 0), data.get('description')
     ))
     conn.commit()
     conn.close()
@@ -134,22 +134,63 @@ def scrape_details(details_url):
         # Scrape URL 
         scraped_data["url"] = details_url
 
-        # Find all the <span> elements under <div class="info-features">
+        # Find all the <span> elements under <div class="property-features">
         info_features = details_soup.find("div", class_="property-features")
         if info_features:
             feature_spans = info_features.find_all("span")
             for feature in feature_spans:
-                feature_text = feature.text.strip().lower()  # Convert to lowercase for easier comparison
-                if "m²" in feature_text:
-                    scraped_data["square_meters_built"] = feature_text.replace("área bruta", "").replace("m²", "").strip()
+                feature_text = feature.text.strip()
+                
+                # For square_meters_built
+                if "Área bruta" in feature_text and "m²" in feature_text:
+                    try:
+                        square_meters_built = float(feature_text.replace("Área bruta", "").replace("m²", "").strip())
+                        scraped_data["square_meters_built"] = square_meters_built
+                    except ValueError:
+                        logging.error("Failed to convert square_meters_built to float.")
+                
+                # For number_of_rooms
                 elif "quartos" in feature_text:
-                    scraped_data["number_of_rooms"] = feature_text.replace(" quartos", "").strip()  # number of habitable divisions
-                elif "com elevador" in feature_text:
+                    try:
+                        number_of_rooms = int(feature_text.replace(" quartos", "").strip())
+                        scraped_data["number_of_rooms"] = number_of_rooms
+                    except ValueError:
+                        logging.error("Failed to convert number_of_rooms to int.")
+                
+                # For construction_year
+                elif "Ano construção:" in feature_text:
+                    try:
+                        construction_year = int(feature_text.replace("Ano construção:", "").strip())
+                        scraped_data["construction_year"] = construction_year
+                    except ValueError:
+                        logging.error("Failed to convert construction_year to int.")
+
+
+
+        # Scrape Extended details 
+        # Initialize to None before the loop
+        scraped_data["with_elevator"] = None
+        scraped_data["with_garage"] = None
+
+        # Find all the <span> elements under <div class="info-features">
+        info_features_extended = details_soup.find("div", class_="property-features highlights")
+        if info_features_extended:
+            feature_spans_extended = info_features_extended.find_all("span")
+            for feature_extended in feature_spans_extended:
+                feature_text_extended = feature_extended.text.strip()
+                if "Com elevador" in feature_text_extended:
                     scraped_data["with_elevator"] = True  # If it has or not an elevator
-                elif "com garagem" in feature_text:
+                elif "Com garagem" in feature_text_extended:
                     scraped_data["with_garage"] = True  # if it has a garage
-                elif "ano construção:" in feature_text:
-                    scraped_data["construction_year"] = feature_text.replace("ano construção:", "").strip()  # construction year, if available
+                else:
+                    scraped_data["with_elevator"] = None
+                    scraped_data["with_garage"] = None
+                    logging.error("Failed to extract extended details from the page.")    
+        # Check if data for "Com elevador" and "Com garagem" was not scraped
+        if scraped_data["with_elevator"] is None or scraped_data["with_garage"] is None:
+            logging.error("Failed to extract extended details for 'Com elevador' or 'Com garagem'.")
+        
+
 
 
         # Scrape total square meter
@@ -157,8 +198,12 @@ def scrape_details(details_url):
         area_bruta_element = details_soup.find("li", class_="key-feature", string="Área Bruta")
         if area_bruta_element:
             area_bruta_text = area_bruta_element.text.strip()
-            total_sq_meter = float(area_bruta_text.replace("Área Bruta :", "").replace("m2", "").strip())
-            scraped_data["total_sq_meter"] = total_sq_meter
+            try:
+                total_sq_meter = float(area_bruta_text.replace("Área Bruta :", "").replace("m2", "").strip())
+                scraped_data["total_sq_meter"] = total_sq_meter
+            except ValueError:
+                # Log an error message if conversion to float fails
+                logging.error("Failed to convert total sq/meter to float.")
         else:
             scraped_data["total_sq_meter"] = None
             # Log an error message if total sq meter extraction fails
@@ -174,35 +219,8 @@ def scrape_details(details_url):
             # Log an error message if total sq meter extraction fails
             logging.error("Failed to extract price_per_sq_meter from the page.")
 
-        # import re
 
-        # price_per_sq_meter_div = details_soup.find('div', class_='detail-info-counter-txt')
-
-        # if price_per_sq_meter_div:
-        #     # Find the 'strong' element inside the 'div'
-        #     strong_element = price_per_sq_meter_div.find('strong')
-            
-        #     if strong_element:
-        #         price_per_sq_meter_text = strong_element.get_text(strip=True)  # Get the text inside the strong element
-        #         match = re.search(r'Preço / m²:\s*([\d.,]+)\s*€', price_per_sq_meter_text)
-                
-        #         if match:
-        #             price_per_sq_meter_value = match.group(1).replace(',', '.')
-                    
-        #             try:
-        #                 price_per_sq_meter = float(price_per_sq_meter_value)
-        #             except ValueError:
-        #                 price_per_sq_meter = None
-        #                 logging.error("Failed to convert Price per sq/m value to float.")
-        #         else:
-        #             price_per_sq_meter = None
-        #             logging.error("Failed to find '€ / m²' pattern in the strong element.")
-        #     else:
-        #         price_per_sq_meter = None
-        # else:
-        #     price_per_sq_meter = None
-
-        # logging.info(f"price_per_sq_meter: {price_per_sq_meter}")
+    
 
         # Scrape days in market
         days_in_market = details_soup.find("p", class_="property-lastupdate")

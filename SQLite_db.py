@@ -7,7 +7,7 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS listings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', 'now')),
+        timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', datetime('now', '+1 hour'))),
         address TEXT,
         thumbnail TEXT,
         listing_price REAL,
