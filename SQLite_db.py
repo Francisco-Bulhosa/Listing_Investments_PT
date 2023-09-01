@@ -7,15 +7,13 @@ def initialize_database():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS listings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', datetime('now', '+1 hour'))),
+        timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', 'now')),
         address TEXT,
         thumbnail TEXT,
-        listing_price REAL,
+        listing_price TEXT,
         listing_date TEXT,
         property_type TEXT,
-        construction_year TEXT,
-        state TEXT,
-        description TEXT,
+        construction_year INTEGER,
         url TEXT,
         square_meters_built REAL,
         total_sq_meter REAL,
@@ -23,7 +21,10 @@ def initialize_database():
         number_of_rooms INTEGER,
         number_of_baths INTEGER,
         with_elevator INTEGER DEFAULT 0, 
-        with_garage INTEGER DEFAULT 0 
+        with_garage INTEGER DEFAULT 0,
+        living_rooms INTEGER,
+        kitchens INTEGER,
+        description TEXT
     );
     """)
     
