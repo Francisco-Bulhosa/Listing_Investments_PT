@@ -21,7 +21,6 @@ def initialize_database():
         listing_date TEXT,
         property_type TEXT,
         construction_year INTEGER,
-        state TEXT,
         url TEXT,
         square_meters_built REAL,
         total_sq_meter REAL,
@@ -30,6 +29,8 @@ def initialize_database():
         number_of_baths INTEGER,
         with_elevator INTEGER DEFAULT 0, 
         with_garage INTEGER DEFAULT 0,
+        living_rooms INTEGER,
+        kitchens INTEGER,
         description TEXT
     );
     """)
@@ -44,18 +45,18 @@ def insert_into_database(data):
     cursor = conn.cursor()
     cursor.execute("""
     INSERT INTO listings (
-        address, thumbnail, listing_price, listing_date, property_type, construction_year, state,
+        address, thumbnail, listing_price, listing_date, property_type, construction_year,
          url, square_meters_built, total_sq_meter, price_per_sq_meter,
-        number_of_rooms, number_of_baths, with_elevator, with_garage, description
+        number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, description
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
-        data.get('listing_date'), data.get('property_type'), data.get('construction_year'), data.get('state'), 
+        data.get('listing_date'), data.get('property_type'), data.get('construction_year'), 
         data.get('url'), data.get('square_meters_built'),
         data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
         data.get('number_of_baths'), data.get('with_elevator', 0),
-        data.get('with_garage', 0), data.get('description')
+        data.get('with_garage', 0), data.get('living_rooms'), data.get('kitchens'), data.get('description')
     ))
     conn.commit()
     conn.close()
@@ -100,36 +101,80 @@ def scrape_details(details_url):
             # Log an error message if address extraction fails
             logging.error("Failed to extract address from the page.")
 
+
+        # Initialize listing_price to None
+        listing_price = None
         # Scrape listing price
         listing_price_element = details_soup.find("div", class_="property-price")
         if listing_price_element is not None:
             # Get the text of the span element
             listing_price_text = listing_price_element.get_text(strip=True)
             
-            # Remove unwanted characters (e.g., "€" and extra text)
+            # Remove unwanted characters like "€" and "Simular prestação"
             listing_price_cleaned = listing_price_text.replace("€", "").replace("Simular prestação", "").strip()
-
-            # Convert the cleaned listing price to a float and round to two decimal places
-            listing_price = round(float(listing_price_cleaned), 2)
             
-            # Store the cleaned listing price in the scraped_data dictionary
-            scraped_data["listing_price"] = listing_price
+            # Remove dots and replace commas with dots for conversion to float
+            listing_price_cleaned = listing_price_cleaned.replace(".", "").replace(",", ".")
+            
+            try:
+                # Convert the cleaned listing price to a float
+                listing_price = float(listing_price_cleaned)
+                
+                # Store the cleaned listing price in the scraped_data dictionary
+                scraped_data["listing_price"] = listing_price
+            except ValueError:
+                logging.error("Failed to convert listing_price to float.")
+        else:
+            logging.error("Failed to find the listing price element.")
 
+
+        from datetime import datetime
+        import re
 
         # Scrape listing date
-        listing_date = details_soup.find("p", class_="stats-text")
-        if listing_date:
-            scraped_data["listing_date"] = listing_date.text.strip()
+        listing_date_element = details_soup.find("div", class_="property-lastupdate")
+        if listing_date_element:
+            listing_date_text = listing_date_element.text.strip()
+            
+            # Using regex to find the date pattern in the text
+            match = re.search(r"(\d+ de \w+)", listing_date_text)
+            if match:
+                extracted_date_text = match.group(1)
+                
+                # Translate month names from Portuguese to English
+                month_translation = {
+                    'janeiro': 'January',
+                    'fevereiro': 'February',
+                    'março': 'March',
+                    'abril': 'April',
+                    'maio': 'May',
+                    'junho': 'June',
+                    'julho': 'July',
+                    'agosto': 'August',
+                    'setembro': 'September',
+                    'outubro': 'October',
+                    'novembro': 'November',
+                    'dezembro': 'December'
+                }
+                
+                day, _, month = extracted_date_text.split(' ')
+                month_in_english = month_translation[month.lower()]
+                
+                # Convert to MM-DD format
+                formatted_date = datetime.strptime(f"{day} {month_in_english}", "%d %B").strftime("%m-%d")
+                scraped_data["listing_date"] = formatted_date
+            else:
+                logging.error("Failed to extract the date from the listing date text.")
+        else:
+            logging.error("Failed to find the listing date element.")
+
+
 
         # Scrape property type
         property_type = details_soup.find("div", class_="property-type")
         if property_type:
             scraped_data["property_type"] = property_type.text.strip()
 
-        # Scrape state (New, Used, etc.)
-        state = details_soup.find("div", class_="property-state")
-        if state:
-            scraped_data["state"] = state.text.strip()
 
         # Scrape URL 
         scraped_data["url"] = details_url
@@ -194,12 +239,13 @@ def scrape_details(details_url):
 
 
         # Scrape total square meter
+        import re
         total_sq_meter = None  # Initialize the variable
-        area_bruta_element = details_soup.find("li", class_="key-feature", string="Área Bruta")
+        area_bruta_element = details_soup.find("li", class_="key-feature", string=re.compile("Área Bruta"))
         if area_bruta_element:
             area_bruta_text = area_bruta_element.text.strip()
             try:
-                total_sq_meter = float(area_bruta_text.replace("Área Bruta :", "").replace("m2", "").strip())
+                total_sq_meter = float(area_bruta_text.replace("Área Bruta :", "").replace("m2", "").replace("m²", "").strip())
                 scraped_data["total_sq_meter"] = total_sq_meter
             except ValueError:
                 # Log an error message if conversion to float fails
@@ -212,6 +258,7 @@ def scrape_details(details_url):
 
         # Calculate price per square meter
         if listing_price is not None and total_sq_meter is not None:
+            logging.info(f"Listing Price: {listing_price}, Total Sq Meter: {total_sq_meter}")
             price_per_sq_meter = listing_price / total_sq_meter
             scraped_data["price_per_sq_meter"] = price_per_sq_meter
         else:
@@ -220,7 +267,59 @@ def scrape_details(details_url):
             logging.error("Failed to extract price_per_sq_meter from the page.")
 
 
-    
+
+        # Locate the div element containing detail-info-features-list
+        features_list_div = details_soup.find("div", class_="detail-info-features-list")
+        if features_list_div:
+            logging.info("Found 'detail-info-features-list' div.")
+            
+            divisoes_ul = None
+            for ul in features_list_div.find_all("ul"):
+                feature_title_li = ul.find("li", class_="feature-title")
+                if feature_title_li and feature_title_li.text.strip() == "Divisões":
+                    divisoes_ul = ul
+                    logging.info("Found 'Divisões' ul.")
+                    break
+            else:
+                logging.error("Failed to find 'Divisões' ul.")
+            
+            if divisoes_ul:
+                key_features = divisoes_ul.find_all("li", class_="key-feature")
+                if key_features:
+                    logging.info("Found key features under 'Divisões'.")
+                    for feature in key_features:
+                        feature_text = feature.text.strip()
+                        
+                        # For Casa(s) de Banho
+                        if "Casa(s) de Banho :" in feature_text:
+                            try:
+                                number_of_baths = int(feature_text.replace("Casa(s) de Banho :", "").strip())
+                                scraped_data["number_of_baths"] = number_of_baths
+                            except ValueError:
+                                logging.error("Failed to convert number_of_baths to int.")
+                        
+                        # For Sala(s)
+                        elif "Sala(s) :" in feature_text:
+                            try:
+                                living_rooms = int(feature_text.replace("Sala(s) :", "").strip())
+                                scraped_data["living_rooms"] = living_rooms
+                            except ValueError:
+                                logging.error("Failed to convert living_rooms to int.")
+                        
+                        # For Cozinha(s)
+                        elif "Cozinha(s) :" in feature_text:
+                            try:
+                                kitchens = int(feature_text.replace("Cozinha(s) :", "").strip())
+                                scraped_data["kitchens"] = kitchens
+                            except ValueError:
+                                logging.error("Failed to convert kitchens to int.")
+                else:
+                    logging.error("Failed to find any key features under 'Divisões'.")
+        else:
+            logging.error("Failed to find 'detail-info-features-list' div.")
+
+
+
 
         # Scrape days in market
         days_in_market = details_soup.find("p", class_="property-lastupdate")
@@ -266,7 +365,7 @@ if __name__ == "__main__":
 
     # Counter for the number of listings scraped
     count = 0
-    max_count = 10  # Maximum number of listings to scrape
+    max_count = 200  # Maximum number of listings to scrape
 
 
     while start_url and count < max_count:  # Modified this line to include count < max_count
