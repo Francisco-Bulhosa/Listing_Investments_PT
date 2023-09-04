@@ -365,12 +365,12 @@ if __name__ == "__main__":
 
 
     # Starting URL
-    start_url = "https://supercasa.pt/comprar-casas/almada/caparica-e-trafaria"
+    start_url = "https://supercasa.pt/comprar-casas/almada"
 
 
     # Counter for the number of listings scraped
     count = 0
-    max_count = 200  # Maximum number of listings to scrape
+    max_count = 2500  # Maximum number of listings to scrape
 
         # Counter for the number of failed attempts to fetch next page
     failed_next_page_count = 0
