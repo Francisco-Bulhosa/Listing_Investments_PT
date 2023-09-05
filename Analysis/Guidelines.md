@@ -41,3 +41,52 @@ Cap Rate = (NOI / Property Purchase Price) * 100%
 ## Local Regulations and Taxation:
 
 - Understand local regulations, property taxes, and any tax incentives or deductions available for real estate investors.
+
+
+Zones
+Costa da Caparica
+Caparica e Trafaria
+Charneca de Caparica e Sobreda
+Laranjeiro e Feijó
+Almada, Cova da Piedade, Pragal e Cacilhas
+
+Universities
+Universidade Nova de Lisboa - Faculdade de Ciências e Tecnologia
+Instituto Superior de Estudos Interculturais e Transdisciplinares de Almada
+Instituto Politécnico Jean Piaget do Sul - Escola Superior de Educação Jean Piaget de Almada
+Instituto Politécnico Jean Piaget do Sul - Escola Superior de Tecnologia e Gestão Jean Piaget
+Instituto Universitário Militar - Escola Naval
+
+Metro 
+Metro Fomega 
+Metro Boa Esperança
+Metro Pragal
+Metro S. João Baptista
+Metro António Gedeão
+Metro Almada 
+Metro Parque da Paz
+Metro Gil Vicente
+Metro Cova da Piedade
+Metro António Gedeão
+Metro Laranjeiro
+Metro Casa do Povo
+Metro Sto Amaro
+
+Hospitals and Health Centers
+Unidade Cuidados Saúde Personalizados da Charneca da Caparica
+Centro de Saúde Costa da Caparica
+Hospital Particular de Almada
+Centro de Saúde Almada
+Hospital Garcia de Orta
+Centro de Saúde Corroios 
+
+Train Station
+Estação de Comboios de Pragal
+
+Beaches
+Praia da Costa da Caparica
+Praia do Norte
+Praia do Tarquínio-Paraíso
+Praia do Dragão Vermelho
+Praia Nova
+Praia de Santo António

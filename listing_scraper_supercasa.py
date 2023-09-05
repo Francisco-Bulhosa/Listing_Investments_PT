@@ -6,6 +6,7 @@ import sqlite3
 from SQLite_db import initialize_database
 
 
+#region # Create Database
 
 def initialize_database():
     conn = sqlite3.connect("listings.db")
@@ -16,6 +17,7 @@ def initialize_database():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT DEFAULT (strftime('%Y-%m-%d %H:00', 'now')),
         address TEXT,
+        zone TEXT,
         thumbnail TEXT,
         listing_price TEXT,
         listing_date TEXT,
@@ -38,20 +40,23 @@ def initialize_database():
     conn.commit()
     conn.close()
 
+#endregion
 
+
+#region # Insert into database
 
 def insert_into_database(data):
     conn = sqlite3.connect("listings.db")
     cursor = conn.cursor()
     cursor.execute("""
     INSERT INTO listings (
-        address, thumbnail, listing_price, listing_date, property_type, construction_year,
+        address, zone, thumbnail, listing_price, listing_date, property_type, construction_year,
          url, square_meters_built, total_sq_meter, price_per_sq_meter,
         number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, description
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data.get('address'), data.get('thumbnail'), data.get('listing_price'), 
+        data.get('address'), data.get('zone'), data.get('thumbnail'), data.get('listing_price'), 
         data.get('listing_date'), data.get('property_type'), data.get('construction_year'), 
         data.get('url'), data.get('square_meters_built'),
         data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
@@ -61,6 +66,10 @@ def insert_into_database(data):
     conn.commit()
     conn.close()
 
+#endregion
+
+
+#region # Detail Scraper
 
 def scrape_details(details_url):
         try:
@@ -87,20 +96,19 @@ def scrape_details(details_url):
 
             # Check if the address div was found
             if address_div:
+                # Replace <br> tags with commas
+                for br in address_div.find_all("br"):
+                    br.replace_with(", ")
+
                 # Extract the text from the address div
                 address_text = address_div.get_text(strip=True)
-                
-                # Split the text by line breaks to get individual address parts
-                address_parts = address_text.split("<br>")
-                
-                # Remove any leading or trailing whitespace from each address part
-                address_parts = [part.strip() for part in address_parts]
-                
-                # Join the address parts with commas to create the complete address
-                complete_address = ", ".join(address_parts)
-                
+
                 # Store the complete address in the scraped_data dictionary
-                scraped_data["address"] = complete_address
+                scraped_data["address"] = address_text
+
+                # Extract the Zone and store it in the scraped_data dictionary
+                zone = address_text.split(', ')[-2] if ', ' in address_text else None
+                scraped_data["zone"] = zone
 
             else:
                 # Log an error message if address extraction fails
@@ -357,8 +365,10 @@ def scrape_details(details_url):
             return None
         
 
-        
+#endregion
 
+
+#region  # Main
 if __name__ == "__main__":
     initialize_database()
     logging.basicConfig(level=logging.INFO)
@@ -370,7 +380,7 @@ if __name__ == "__main__":
 
     # Counter for the number of listings scraped
     count = 0
-    max_count = 2500  # Maximum number of listings to scrape
+    max_count = 500  # Maximum number of listings to scrape
 
         # Counter for the number of failed attempts to fetch next page
     failed_next_page_count = 0
@@ -462,3 +472,6 @@ if __name__ == "__main__":
     else:
         logging.info("Failed to retrieve the webpage")
         start_url = None
+
+
+#endregion

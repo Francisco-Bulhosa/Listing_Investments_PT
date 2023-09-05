@@ -14,18 +14,19 @@ columns = [column[0] for column in cursor.description]
 
 # Fetch and write the data in chunks to the CSV file
 csv_filename = "listings.csv"
-with open(csv_filename, "w", newline="") as csvfile:
+with open(csv_filename, "w", newline="", encoding="utf-8") as csvfile:
     csv_writer = csv.writer(csvfile)
     
     # Write the header (column names)
     csv_writer.writerow(columns)
     
     # Fetch and write data in chunks
-    chunk_size = 1000  # Adjust this to your preference
+    chunk_size = 1000
     while True:
         rows = cursor.fetchmany(chunk_size)
         if not rows:
             break
+        print(f"Fetched {len(rows)} rows")
         csv_writer.writerows(rows)
 
 print(f"CSV file '{csv_filename}' created successfully.")
