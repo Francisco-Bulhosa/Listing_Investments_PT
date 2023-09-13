@@ -48,22 +48,42 @@ def initialize_database():
 def insert_into_database(data):
     conn = sqlite3.connect("listings.db")
     cursor = conn.cursor()
+    # Query the database to check for duplicate listings
     cursor.execute("""
-    INSERT INTO listings (
-        address, zone, thumbnail, listing_price, listing_date, property_type, construction_year,
-         url, square_meters_built, total_sq_meter, price_per_sq_meter,
-        number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, description
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    SELECT * FROM listings WHERE 
+        address = ? AND 
+        listing_price = ? AND 
+        property_type = ? AND 
+        square_meters_built = ?
     """, (
-        data.get('address'), data.get('zone'), data.get('thumbnail'), data.get('listing_price'), 
-        data.get('listing_date'), data.get('property_type'), data.get('construction_year'), 
-        data.get('url'), data.get('square_meters_built'),
-        data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
-        data.get('number_of_baths'), data.get('with_elevator', 0),
-        data.get('with_garage', 0), data.get('living_rooms'), data.get('kitchens'), data.get('description')
+        data.get('address'), 
+        data.get('listing_price'), 
+        data.get('property_type'), 
+        data.get('square_meters_built')
     ))
-    conn.commit()
+    
+    # Fetch the result to see if a duplicate exists
+    duplicate = cursor.fetchone()
+    
+    # If no duplicate is found, insert the data
+    if not duplicate:
+        cursor.execute("""
+        INSERT INTO listings (
+            address, zone, thumbnail, listing_price, listing_date, property_type, construction_year,
+            url, square_meters_built, total_sq_meter, price_per_sq_meter,
+            number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, description
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data.get('address'), data.get('zone'), data.get('thumbnail'), data.get('listing_price'), 
+            data.get('listing_date'), data.get('property_type'), data.get('construction_year'), 
+            data.get('url'), data.get('square_meters_built'),
+            data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
+            data.get('number_of_baths'), data.get('with_elevator', 0),
+            data.get('with_garage', 0), data.get('living_rooms'), data.get('kitchens'), data.get('description')
+        ))
+        conn.commit()
+    
     conn.close()
 
 #endregion

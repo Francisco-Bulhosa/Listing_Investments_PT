@@ -1,0 +1,37 @@
+infrastructure_names,infrastructure_type,gps_coordinates
+Costa da Caparica,zones,"38.6445165, -9.2336068"
+Caparica e Trafaria,zones,"38.653675050000004, -9.216974803299276"
+Charneca de Caparica e Sobreda,zones,"38.60700305, -9.185361986872142"
+Laranjeiro e Feijó,zones,"38.65699215, -9.155532442365413"
+"Almada, Cova da Piedade, Pragal e Cacilhas",zones,"38.6795284, -9.1621473"
+Universidade Nova de Lisboa - Faculdade de Ciências e Tecnologia,universities,"38.6602924, -9.20505201910791"
+Instituto Superior de Estudos Interculturais e Transdisciplinares de Almada,universities,
+Instituto Politécnico Jean Piaget do Sul - Escola Superior de Educação Jean Piaget de Almada,universities,
+Instituto Politécnico Jean Piaget do Sul - Escola Superior de Tecnologia e Gestão Jean Piaget,universities,
+Instituto Universitário Militar - Escola Naval,universities,
+Metro Fomega ,metro,"38.6653619, -9.194749"
+Metro Boa Esperança,metro,"-12.9258341, -38.4676004"
+Metro Pragal,metro,"38.7125494, -9.1402376"
+Metro S. João Baptista,metro,
+Metro António Gedeão,metro,"38.7073463, -9.1335726"
+Metro Almada ,metro,"38.7125603, -9.1401843"
+Metro Parque da Paz,metro,
+Metro Gil Vicente,metro,
+Metro Cova da Piedade,metro,"38.7073463, -9.1335726"
+Metro António Gedeão,metro,"38.7073463, -9.1335726"
+Metro Laranjeiro,metro,
+Metro Casa do Povo,metro,
+Metro Sto Amaro,metro,"-23.6268943, -46.6875731"
+Unidade Cuidados Saúde Personalizados da Charneca da Caparica,hospitals_or_health_centers,
+Centro de Saúde Costa da Caparica,hospitals_or_health_centers,"38.64494055, -9.236880002877903"
+Hospital Particular de Almada,hospitals_or_health_centers,"38.6735651, -9.154540328099634"
+Centro de Saúde Almada,hospitals_or_health_centers,"38.6733076, -9.1670389"
+Hospital Garcia de Orta,hospitals_or_health_centers,"38.673861, -9.176937647194904"
+Centro de Saúde Corroios,hospitals_or_health_centers,"38.64524955, -9.147275809238392"
+Estação de Comboios de Pragal,train_station,"38.6662271, -9.1799821"
+Praia da Costa da Caparica,beaches,"38.64170005, -9.238697158010186"
+Praia do Norte,beaches,"38.602157, -28.7568426"
+Praia do Tarquínio-Paraíso,beaches,"38.64170005, -9.238697158010186"
+Praia do Dragão Vermelho,beaches,"38.640060000000005, -9.237318964479556"
+Praia Nova,beaches,"-19.6147785, 35.2162102"
+Praia de Santo António,beaches,"37.1719456, -7.414558187755759"
