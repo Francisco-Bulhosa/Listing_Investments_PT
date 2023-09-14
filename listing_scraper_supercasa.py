@@ -114,6 +114,16 @@ def scrape_details(details_url):
             # Locate the div element with class "detail-info-map-info"
             address_div = details_soup.find("div", class_="detail-info-map-info")
 
+
+            # List of predefined zones
+            zones = [
+                "Costa da Caparica",
+                "Caparica e Trafaria",
+                "Charneca de Caparica e Sobreda",
+                "Laranjeiro e Feijó",
+                "Almada, Cova da Piedade, Pragal e Cacilhas"
+            ]
+
             # Check if the address div was found
             if address_div:
                 # Replace <br> tags with commas
@@ -126,9 +136,15 @@ def scrape_details(details_url):
                 # Store the complete address in the scraped_data dictionary
                 scraped_data["address"] = address_text
 
-                # Extract the Zone and store it in the scraped_data dictionary
-                zone = address_text.split(', ')[-2] if ', ' in address_text else None
-                scraped_data["zone"] = zone
+                # Check for a matching zone in the scraped address
+                matched_zone = "Almada"  # default value
+                for potential_zone in zones:
+                    if potential_zone in address_text:
+                        matched_zone = potential_zone
+                        break
+
+                # Store the matched or default zone in the scraped_data dictionary
+                scraped_data["zone"] = matched_zone
 
             else:
                 # Log an error message if address extraction fails
