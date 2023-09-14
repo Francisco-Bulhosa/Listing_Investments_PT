@@ -4,7 +4,8 @@ import time
 import logging
 import sqlite3 
 from SQLite_db import initialize_database
-
+from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
 
 #region # Create Database
 
@@ -33,6 +34,8 @@ def initialize_database():
         with_garage INTEGER DEFAULT 0,
         living_rooms INTEGER,
         kitchens INTEGER,
+        latitude INTEGER,
+        longitude INTEGER,
         description TEXT
     );
     """)
@@ -71,16 +74,17 @@ def insert_into_database(data):
         INSERT INTO listings (
             address, zone, thumbnail, listing_price, listing_date, property_type, construction_year,
             url, square_meters_built, total_sq_meter, price_per_sq_meter,
-            number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, description
+            number_of_rooms, number_of_baths, with_elevator, with_garage, living_rooms, kitchens, latitude, longitude, description
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             data.get('address'), data.get('zone'), data.get('thumbnail'), data.get('listing_price'), 
             data.get('listing_date'), data.get('property_type'), data.get('construction_year'), 
             data.get('url'), data.get('square_meters_built'),
             data.get('total_sq_meter'), data.get('price_per_sq_meter'), data.get('number_of_rooms'),
             data.get('number_of_baths'), data.get('with_elevator', 0),
-            data.get('with_garage', 0), data.get('living_rooms'), data.get('kitchens'), data.get('description')
+            data.get('with_garage', 0), data.get('living_rooms'), data.get('kitchens'), data.get('latitude'),
+            data.get('longitude'), data.get('description')
         ))
         conn.commit()
     
@@ -422,6 +426,23 @@ if __name__ == "__main__":
     failed_next_page_count = 0
     max_failed_next_page_count = 5  # Maximum number of failed attempts
 
+
+    # Initialize Nominatim geolocator
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=2)
+
+    # Function to get latitude and longitude from address
+    def get_lat_lon(address):
+        try:
+            location = geocode(address)
+            if location:
+                return location.latitude, location.longitude
+        except:
+            return None, None
+        return None, None
+
+
+
     while start_url and count < max_count:  # Modified this line to include count < max_count
     # while start_url:
         # Make a request to the Idealista website
@@ -456,6 +477,12 @@ if __name__ == "__main__":
                             
                             full_details_link = "https://supercasa.pt" + details_link
                             details_data = scrape_details(full_details_link)
+
+                            # Get latitude and longitude for the address in details_data
+                            if 'address' in details_data:
+                                lat, lon = get_lat_lon(details_data['address'])
+                                details_data['latitude'] = lat
+                                details_data['longitude'] = lon
                             
                             if details_data:  # Check if details were successfully scraped
                                 insert_into_database(details_data)  # Insert data into the database

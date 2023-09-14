@@ -1,0 +1,34 @@
+infrastructure_names,infrastructure_type,weights,dynamic_wheight,latitude,longitude
+Costa da Caparica,zones,1,2,38.6445165,-9.2336068
+Caparica e Trafaria,zones,1,2,38.65367505,-9.216974803
+Charneca de Caparica e Sobreda,zones,1,1,38.60700305,-9.185361987
+Laranjeiro e Feijó,zones,1,1,38.65699215,-9.155532442
+"Almada, Cova da Piedade, Pragal e Cacilhas",zones,1,2,38.6805258,-9.1599915
+Universidade Nova de Lisboa - Faculdade de Ci�ncias e Tecnologia,universities,6,2,38.6602924,-9.205052019
+Metro Fomega ,metro,2,1.5,38.6653619,-9.194749
+Metro Boa Esperan�a,metro,2,1.5,-12.9258341,-38.4676004
+Metro Pragal,metro,3,1.5,38.7125494,-9.1402376
+Metro S. João Baptista,metro,2,1.5,38.679502,-9.157628
+Metro António Gedeão,metro,2,1.5,38.7073463,-9.1335726
+Metro Almada ,metro,3,1.5,38.7125603,-9.1401843
+Metro Parque da Paz,metro,2,1.5,38.664347,-9.16002
+Metro Gil Vicente,metro,2,1.5,38.682516,-9.152262
+Metro Cova da Piedade,metro,2,1.5,38.7073463,-9.1335726
+Metro António Gedeão,metro,2,1.5,38.7073463,-9.1335726
+Metro Laranjeiro,metro,2,1.5,38.655855,-9.1544
+Metro Casa do Povo,metro,2,1.5,38.642502,-9.151791
+Metro Sto Amaro,metro,2,1.5,-23.6268943,-46.6875731
+Centro de Saúde Costa da Caparica,hospitals_or_health_centers,2,1.2,38.64494055,-9.236880003
+Hospital Particular de Almada,hospitals_or_health_centers,2,1.2,38.6735651,-9.154540328
+Centro de Saúde Almada,hospitals_or_health_centers,2,1.2,38.6742778,-9.1675671
+Hospital Garcia de Orta,hospitals_or_health_centers,3,1.2,38.673861,-9.176937647
+Centro de Saúde Corroios,hospitals_or_health_centers,2,1.2,38.64524955,-9.147275809
+Estação de Comboios de Pragal,train_station,4,3,38.6662271,-9.1799821
+Praia da Costa da Caparica,beaches,4,1.5,38.64170005,-9.238697158
+Praia do Norte,beaches,3,1.5,38.602157,-28.7568426
+Praia do Tarquínio-Paraíso,beaches,2,1.5,38.64170005,-9.238697158
+Praia do Dragão Vermelho,beaches,3,1.5,38.64006,-9.237318964
+Praia Nova,beaches,2,1.5,-19.6147785,35.2162102
+Praia de Santo António,beaches,2,1.5,37.1719456,-7.414558188
+Almada Fórum, high_relevance,6,1.5,38.66001545,-9.175181492
+Ponte 25 de Abril, high_relevance,6,1.5,38.6940063,-9.1780148
