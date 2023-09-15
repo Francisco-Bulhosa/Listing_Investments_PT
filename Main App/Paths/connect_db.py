@@ -16,3 +16,5 @@ def create_connection():
         print(f"Error {e.args[0]}: Could not establish a connection to the database.")
         return None
 
+import os
+print(os.getcwd())
