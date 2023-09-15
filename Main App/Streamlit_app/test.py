@@ -31,14 +31,15 @@ filtered_listings = listings_df
 if chosen_zone != "Any":
     filtered_listings = filtered_listings[filtered_listings.zone == chosen_zone]
 
-#Apply Weights and Penalties
-# Calculate the score for each listing using the calculate_score function
-filtered_listings['score'] = filtered_listings.apply(
-    lambda row: calculate_score(row, chosen_infra, chosen_intention), axis=1)
+# Apply Weights and Penalties
+# Fetch listings
+listings = get_listings_from_db()  # Fetched from the get_listings.py 
 
-# Sort Listings Based on Score
-sorted_listings = filtered_listings.sort_values(by='score', ascending=False)
-
+# Calculate scores for each listing
+scores = []
+for listing in listings:
+    score = calculate_score(listing, chosen_infra, chosen_intention)
+    scores.append(score)
 
 
 # Placeholder for top 10 results and map
