@@ -1,7 +1,7 @@
 
 from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
 from Paths.connect_db import create_connection
-
+import pandas as pd
 
 class metrics:
 
@@ -48,18 +48,18 @@ class metrics:
 
 
 
-class base_metrics:
-    def calculate_cash_flow(rental_income, expenses):
-        return rental_income - expenses
 
-    def one_percent_rule(purchase_price):
-        return purchase_price * 0.01
+def calculate_cash_flow(rental_income, expenses):
+    return rental_income - expenses
 
-    def calculate_cap_rate(NOI, purchase_price):
-        return (NOI / purchase_price) * 100
+def one_percent_rule(purchase_price):
+    return purchase_price * 0.01
 
-    def calculate_ROI(net_profit, initial_investment):
-        return (net_profit / initial_investment) * 100
+def calculate_cap_rate(NOI, purchase_price):
+    return (NOI / purchase_price) * 100
 
-    def calculate_GRM(purchase_price, annual_rental_income):
-        return purchase_price / annual_rental_income
+def calculate_ROI(net_profit, initial_investment):
+    return (net_profit / initial_investment) * 100
+
+def calculate_GRM(purchase_price, annual_rental_income):
+    return purchase_price / annual_rental_income
