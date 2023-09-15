@@ -1,4 +1,4 @@
-from Infrastructue_data.get_listings import create_connection
+from Paths.connect_db import create_connection
 
 class Listing:
     def __init__(self, **kwargs):

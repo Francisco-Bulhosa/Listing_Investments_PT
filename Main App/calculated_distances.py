@@ -13,7 +13,8 @@ listings_df = pd.read_sql_query("SELECT * FROM listings", conn)
 infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Infrastructue_data\\Infrastructure.csv')
 
 print(listings_df.columns)
-print(infra_df.columns)
+print(infra_df.shape)
+print(infra_df.index)
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """
