@@ -1,4 +1,4 @@
-infrastructure_names,infrastructure_type,weights,dynamic_wheight,latitude,longitude
+infrastructure_names,infrastructure_type,weights,dynamic_weights,latitude,longitude
 Costa da Caparica,zones,1,2,38.6445165,-9.2336068
 Caparica e Trafaria,zones,1,2,38.65367505,-9.216974803
 Charneca de Caparica e Sobreda,zones,1,1,38.60700305,-9.185361987
