@@ -1,4 +1,7 @@
 
+from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
+
+
 def calculate_score(listing, chosen_infra, chosen_intention):
     score = 0
 
@@ -31,6 +34,18 @@ def calculate_score(listing, chosen_infra, chosen_intention):
         score += listing.rental_yield
 
     return score
+
+
+# Fetch listings - this could be a list of Listing objects or rows from a DataFrame
+listings = get_listings_from_db()  # Placeholder function, you'd replace this with the actual function you use to fetch listings
+
+# Calculate scores for each listing
+scores = []
+for listing in listings:
+    score = calculate_score(listing, chosen_infra, chosen_intention)
+    scores.append(score)
+
+
 
 # 1. Initial Filter
 filtered_listings = listings_df
