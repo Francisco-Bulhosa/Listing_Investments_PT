@@ -1,24 +1,20 @@
 import streamlit as st
-import pa
+import sqlite3
+import pandas as pd
+from Paths.paths import INFRASTRUCTURE_CSV_PATH, LISTINGS_DB_PATH
+
 
 # Assuming listings_df is loaded somewhere in your app, replace with actual dataframe name
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)
 st.write(sorted_listings)
 
-ndas as pd
-
-import sqlite3
-
-
-import pandas as pd
 
 # Load the infrastructure data
-infra_df = pd.read_csv("/mnt/data/Infrastructure.csv")
+infra_df = pd.read_csv(INFRASTRUCTURE_CSV_PATH)
 
 def scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention):
 
-    from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
-    
+        
     
     def calculate_score(listing, chosen_infra, chosen_intention):
         score = 0

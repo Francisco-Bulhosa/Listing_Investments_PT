@@ -1,11 +1,11 @@
 import streamlit as st
-import pa
+import pandas as pd
 
 # Assuming listings_df is loaded somewhere in your app, replace with actual dataframe name
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)
 st.write(sorted_listings)
 
-ndas as pd
+
 from scoring_logic import updated_scoring_logic
 import sqlite3
 
