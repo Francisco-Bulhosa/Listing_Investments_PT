@@ -1,8 +1,8 @@
-
+from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
 import pandas as pd
 
 # Load the infrastructure data
-infra_df = pd.read_csv("/mnt/data/Infrastructure.csv")
+infra_df = INFRASTRUCTURE_CSV_PATH
 
 def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention):
 
@@ -12,8 +12,7 @@ def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intenti
     
     def scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention):
     
-        from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
-        
+    
         
         def calculate_score(listing, chosen_infra, chosen_intention):
             score = 0
