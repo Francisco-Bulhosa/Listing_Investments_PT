@@ -1,7 +1,5 @@
 
 import pandas as pd
-import sys
-sys.path
 
 # Load the infrastructure data
 infra_df = pd.read_csv("/mnt/data/Infrastructure.csv")
