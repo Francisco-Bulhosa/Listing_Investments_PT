@@ -1,17 +1,17 @@
 import streamlit as st
 import pandas as pd
+from scoring_logic import updated_scoring_logic
+from Paths.paths import LISTINGS_DB_PATH
+import sqlite3
+
 
 # Assuming listings_df is loaded somewhere in your app, replace with actual dataframe name
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)
 st.write(sorted_listings)
 
 
-from scoring_logic import updated_scoring_logic
-import sqlite3
-
-
 # Connect to the SQLite database
-conn = sqlite3.connect('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Scraper\\listings.db')
+conn = LISTINGS_DB_PATH
 # Load infrastructure data
 infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Infrastructue_data\\Infrastructure.csv')
 

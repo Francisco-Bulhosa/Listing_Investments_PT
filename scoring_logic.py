@@ -1,12 +1,13 @@
 
 import pandas as pd
+import sys
+sys.path
 
 # Load the infrastructure data
 infra_df = pd.read_csv("/mnt/data/Infrastructure.csv")
 
 def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention):
 
-    import pandas as pd
     
     # Load the infrastructure data
     infra_df = pd.read_csv("/mnt/data/Infrastructure.csv")
