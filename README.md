@@ -1,5 +1,8 @@
 # Real Estate Investment Opportunity Scraper
 
+
+## Ongoing...
+
 This project aims to scrape real estate listings from the Idealista website and stores them in a SQLite database. The goal is to identify potential investment opportunities in the real estate market.
 
 ## Table of Contents
