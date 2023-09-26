@@ -7,8 +7,8 @@ This project aims to scrape real estate listings from the Idealista website and 
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Scraper](#scraper)
-  - [SQLite Database](#sqlite-database)
+- [Scraper](#scraper)
+- [SQLite Database](#sqlite-database)
 - [Contributing](#contributing)
 - [License](#license)
 
