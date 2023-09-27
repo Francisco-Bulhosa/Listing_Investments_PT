@@ -21,7 +21,7 @@ st.title("Real Estate Investment Advisor")
 # 1. User Input
 investment_amount = st.number_input("How much do you intend to invest?", min_value=0.0, step=100.0)
 zones = ["Costa da Caparica", "Caparica e Trafaria", "Charneca de Caparica e Sobreda", "Laranjeiro e Feijó",
-          "Almada, Cova da Piedade, Pragal e Cacilhas", "Any"]  # Replace your zones
+"Almada, Cova da Piedade, Pragal e Cacilhas", "Any"]  # Replace your zones
 chosen_zone = st.selectbox("Select a zone:", zones)
 
 intentions = ["Build & Sell", "Rent", "Any"]
