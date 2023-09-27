@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from scoring_logic import updated_scoring_logic
+from ..Scoring.scoring_logic import updated_scoring_logic
 from Paths.paths import LISTINGS_DB_PATH
 import sqlite3
 
