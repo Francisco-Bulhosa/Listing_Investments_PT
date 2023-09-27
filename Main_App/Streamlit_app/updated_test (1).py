@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from ..Scoring.scoring_logic import updated_scoring_logic
+from Scoring.scoring_logic import updated_scoring_logic
 from Paths.paths import LISTINGS_DB_PATH
 import sqlite3
 
@@ -15,7 +15,7 @@ st.write(sorted_listings)
 # Connect to the SQLite database
 conn = LISTINGS_DB_PATH
 # Load infrastructure data
-infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Infrastructue_data\\Infrastructure.csv')
+infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Infrastructue_data\\Infrastructure.csv')
 
 # Title of the app
 st.title("Real Estate Investment Advisor")
