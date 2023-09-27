@@ -1,7 +1,8 @@
 
 import sqlite3
-import sys
 from paths import LISTINGS_DB_PATH
+import sys
+
 
 def create_connection():
     """

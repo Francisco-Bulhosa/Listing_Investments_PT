@@ -4,10 +4,8 @@ from ..Scoring.scoring_logic import updated_scoring_logic
 from Paths.paths import LISTINGS_DB_PATH
 import sqlite3
 
-import sys
 
-for path in sys.path:
-    print(path)
+
     
 # Assuming listings_df is loaded somewhere in your app, replace with actual dataframe name
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)

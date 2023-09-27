@@ -2,6 +2,8 @@ from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
 from Paths.connect_db import create_connection
 import pandas as pd
 
+
+
 # Load the infrastructure data
 infra_df = INFRASTRUCTURE_CSV_PATH
 
