@@ -1,6 +1,6 @@
 
 from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
-from Main_App.Paths import connect_db
+from Paths import connect_db
 import pandas as pd
 
 class metrics:

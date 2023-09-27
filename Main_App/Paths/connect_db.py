@@ -1,6 +1,6 @@
 
 import sqlite3
-from Main_App.Paths import paths
+from Paths import paths
 import sys
 
 
