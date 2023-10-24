@@ -6,6 +6,7 @@ sys.path.append('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Ma
 import streamlit as st
 import pandas as pd
 import sqlite3
+from Scoring.metrics import *
 from Scoring.scoring_logic import updated_scoring_logic
 from Paths.paths import LISTINGS_DB_PATH
 from Paths.connect_db import create_connection

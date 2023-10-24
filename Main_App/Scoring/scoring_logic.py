@@ -6,27 +6,31 @@ from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
 from Paths.connect_db import create_connection
 from Scoring.metrics import *
 import pandas as pd
+import streamlit as st
 
 
+        # Load the infrastructure data
+    infra_df = pd.read_csv(INFRASTRUCTURE_CSV_PATH)
 
-# Load the infrastructure data
-infra_df = pd.read_csv(INFRASTRUCTURE_CSV_PATH)
-
-# Create a dictionary of infrastructure weights
-infra_weights = infra_df.set_index('infrastructure_type')['weights'].to_dict()
+    # Create a dictionary of infrastructure weights
+    infra_weights = infra_df.set_index('infrastructure_type')['weights'].to_dict()
 
 
-# Create datafram for Distance Matrix
-distance_matrix = pd.DataFrame()
+    # Create datafram for Distance Matrix
+    distance_matrix = pd.DataFrame()
 
-conn = create_connection()
-if conn is None:
-    st.error("Unable to establish a connection to the database.")
-else:
-    distance_matrix = pd.read_sql_query("SELECT * FROM distance_matrix", conn)
+    conn = create_connection()
+    if conn is None:
+        st.error("Unable to establish a connection to the database.")
+    else:
+        distance_matrix = pd.read_sql_query("SELECT * FROM distance_matrix", conn)
+
+
 
 
 def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention, investment_amount):
+
+
             
         
     def calculate_score(listing, chosen_infra, chosen_intention):
