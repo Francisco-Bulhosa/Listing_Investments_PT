@@ -6,6 +6,9 @@ import sqlite3
 
 
 
+conn = sqlite3.connect(LISTINGS_DB_PATH)
+listings_df = pd.read_sql_query("SELECT * FROM listings", conn)
+
     
 # Assuming listings_df is loaded somewhere in your app, replace with actual dataframe name
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)
@@ -13,7 +16,7 @@ st.write(sorted_listings)
 
 
 # Connect to the SQLite database
-conn = LISTINGS_DB_PATH
+conn = INFRASTRUCTURE_CSV_PATH
 # Load infrastructure data
 infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Infrastructue_data\\Infrastructure.csv')
 

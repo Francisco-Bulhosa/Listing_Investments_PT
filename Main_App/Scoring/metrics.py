@@ -5,6 +5,20 @@ import pandas as pd
 
 class metrics:
 
+    
+    # Load the infrastructure data
+    infra_df = pd.read_csv(INFRASTRUCTURE_CSV_PATH)
+
+    # Create datafram for Distance Matrix
+    distance_matrix = pd.DataFrame()
+
+    conn = create_connection()
+    if conn is None:
+        st.error("Unable to establish a connection to the database.")
+    else:
+        distance_matrix = pd.read_sql_query("SELECT * FROM distance_matrix", conn)
+        
+
     def base_rental_income(num_rooms):
         if num_rooms == 1:
             return 600

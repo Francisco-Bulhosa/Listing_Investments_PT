@@ -1,6 +1,6 @@
 
 import sqlite3
-from Paths import paths
+from Paths.paths import LISTINGS_DB_PATH
 import sys
 
 

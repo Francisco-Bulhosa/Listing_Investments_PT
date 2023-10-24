@@ -1,57 +1,27 @@
 import streamlit as st
 import pandas as pd
-from Scoring.scoring_logic import calculate_score
 import sqlite3
+import os
 
+# Define the path to your SQLite database file
+db_path = 'C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main_App\\Scraper\\listings.db'
 
-# Connect to the SQLite database
-conn = sqlite3.connect('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Scraper\\listings.db')
-# Load infrastructure data
-infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main App\\Infrastructue_data\\Infrastructure.csv')
+# Check if the file exists
+if os.path.exists(db_path) and os.access(db_path, os.R_OK):
+    st.write("Database file found and is readable.")
 
-# Title of the app
-st.title("Real Estate Investment Advisor")
+    # Establish a connection to the SQLite database
+    conn = sqlite3.connect(db_path)
 
-# 1. User Input
-investment_amount = st.number_input("How much do you intend to invest?", min_value=0.0, step=100.0)
-zones = ["Costa da Caparica", "Caparica e Trafaria", "Charneca de Caparica e Sobreda", "Laranjeiro e Feijó",
-          "Almada, Cova da Piedade, Pragal e Cacilhas", "Any"]  # Replace your zones
-chosen_zone = st.selectbox("Select a zone:", zones)
+    # Load data from the "listings" table into a Pandas DataFrame
+    query = "SELECT * FROM listings"
+    listings_df = pd.read_sql_query(query, conn)
 
-intentions = ["Build & Sell", "Rent", "Any"]
-chosen_intention = st.selectbox("What is your intention?", intentions)
+    # Close the database connection
+    conn.close()
 
-infra_options = ["High Relevance (Bridge, Fórum)", "Hospital", "Metro & Train Station", "Beaches", "University", "Any"]
-chosen_infra = st.selectbox("Which infrastructure is most important to you?", infra_options)
+    # Display the DataFrame in Streamlit
+    st.write(listings_df)
 
-
-
-# Filter Listings Based on User Input
-filtered_listings = listings_df
-if chosen_zone != "Any":
-    filtered_listings = filtered_listings[filtered_listings.zone == chosen_zone]
-
-# Apply Weights and Penalties
-# Fetch listings
-listings = get_listings_from_db()  # Fetched from the get_listings.py 
-
-# Calculate scores for each listing
-scores = []
-for listing in listings:
-    score = calculate_score(listing, chosen_infra, chosen_intention)
-    scores.append(score)
-
-
-# Placeholder for top 10 results and map
-results_placeholder = st.empty()
-map_placeholder = st.empty()
-
-if st.button('Show Results'):
-    # Placeholder for demonstration, replace with actual top 10 results
-    results_placeholder.write("Top 10 Results will be displayed here")
-    map_placeholder.map(listings_df.head(10))  # Displaying first 10 rows as an example
-
-# 4. Reset Button
-if st.button('Reset'):
-    # Clear the input fields
-    st.experimental_rerun()
+else:
+    st.error("Either the file is missing or not readable. Please check the file path and permissions.")
