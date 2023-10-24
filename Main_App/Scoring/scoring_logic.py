@@ -34,7 +34,12 @@ def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intenti
         
     def calculate_score(listing, chosen_infra, chosen_intention):
         score = 0
-        
+
+        # Print input values
+        st.write("Listing:", listing)
+        st.write("Chosen Infrastructure:", chosen_infra)
+        st.write("Chosen Intention:", chosen_intention)
+
         try:
                 
             # Use user inputs in calculations
@@ -92,6 +97,9 @@ def updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intenti
             print(f"Error calculating score for listing: {listing}")
             print(f"Exception: {e}")
             score = 0  # You might want to handle this differently
+
+        # Print calculated score
+        st.write("Calculated Score:", score)
 
         return score
     
