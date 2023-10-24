@@ -61,12 +61,15 @@ if chosen_zone != "Any":
 # Initialize to an empty DataFrame
 sorted_listings = pd.DataFrame()  
 
-#Apply scoring logic
+infra_options = ["Infrastructure 1", "Infrastructure 2", "Infrastructure 3", "Any"]
+
+# Apply scoring logic
 try:
-    sorted_listings = updated_scoring_logic(filtered_listings, chosen_zone, chosen_infra, chosen_intention)
+    sorted_listings = updated_scoring_logic(filtered_listings, chosen_zone, chosen_infra, chosen_intention, investment_amount)
 except Exception as e:
     st.error(f"An error occurred while applying scoring logic: {e}")
     sorted_listings = pd.DataFrame()
+
 
 
 if not sorted_listings.empty:
