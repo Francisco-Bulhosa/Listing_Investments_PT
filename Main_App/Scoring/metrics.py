@@ -1,6 +1,9 @@
+# Update Python Path at runtime
+import sys
+sys.path.append('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Main_App')
 
 from Paths.paths import LISTINGS_DB_PATH, INFRASTRUCTURE_CSV_PATH
-from Paths import connect_db
+from Paths.connect_db import create_connection
 import pandas as pd
 
 class metrics:
@@ -17,7 +20,7 @@ class metrics:
         st.error("Unable to establish a connection to the database.")
     else:
         distance_matrix = pd.read_sql_query("SELECT * FROM distance_matrix", conn)
-        
+
 
     def base_rental_income(num_rooms):
         if num_rooms == 1:

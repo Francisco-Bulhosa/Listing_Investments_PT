@@ -5,7 +5,7 @@ from Paths.paths import LISTINGS_DB_PATH
 import sqlite3
 
 
-
+# Connect to the SQLite database for listings
 conn = sqlite3.connect(LISTINGS_DB_PATH)
 listings_df = pd.read_sql_query("SELECT * FROM listings", conn)
 
@@ -14,11 +14,8 @@ listings_df = pd.read_sql_query("SELECT * FROM listings", conn)
 sorted_listings = updated_scoring_logic(listings_df, chosen_zone, chosen_infra, chosen_intention)
 st.write(sorted_listings)
 
-
-# Connect to the SQLite database
-conn = INFRASTRUCTURE_CSV_PATH
 # Load infrastructure data
-infra_df = pd.read_csv('C:\\Users\\franc\\Documents\\GitHub\\Listing_Investments_PT\\Infrastructue_data\\Infrastructure.csv')
+infra_df = pd.read_csv(INFRASTRUCTURE_CSV_PATH)
 
 # Title of the app
 st.title("Real Estate Investment Advisor")
@@ -36,33 +33,22 @@ infra_options = ["High Relevance (Bridge, Fórum)", "Hospital", "Metro & Train S
 chosen_infra = st.selectbox("Which infrastructure is most important to you?", infra_options)
 
 
-
 # Filter Listings Based on User Input
 filtered_listings = listings_df
 if chosen_zone != "Any":
     filtered_listings = filtered_listings[filtered_listings.zone == chosen_zone]
 
-# Apply Weights and Penalties
-# Fetch listings
-listings = get_listings_from_db()  # Fetched from the get_listings.py 
+# 3. Apply Weights and Penalties
+# Note: The function updated_scoring_logic should take care of calculating scores, applying weights and penalties
+try:
+    sorted_listings = updated_scoring_logic(filtered_listings, chosen_zone, chosen_infra, chosen_intention, investment_amount)
+except Exception as e:
+    st.error(f"An error occurred while applying scoring logic: {str(e)}")
+    sorted_listings = pd.DataFrame()
 
-# Calculate scores for each listing
-scores = []
-for listing in listings:
-    score = calculate_score(listing, chosen_infra, chosen_intention)
-    scores.append(score)
-
-
-# Placeholder for top 10 results and map
-results_placeholder = st.empty()
-map_placeholder = st.empty()
-
-if st.button('Show Results'):
-    # Placeholder for demonstration, replace with actual top 10 results
-    results_placeholder.write("Top 10 Results will be displayed here")
-    map_placeholder.map(listings_df.head(10))  # Displaying first 10 rows as an example
-
-# 4. Reset Button
-if st.button('Reset'):
-    # Clear the input fields
-    st.experimental_rerun()
+# 4. Show Results
+if not sorted_listings.empty:
+    st.write("Top Results:")
+    st.write(sorted_listings.head(10))  # Displaying top 10 results
+else:
+    st.write("No listings to display.")
